@@ -47,6 +47,10 @@ ul{margin:6px 0;padding-left:20px}li{margin:3px 0}
 .chips a:hover{border-color:var(--ac)}
 .flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .flow span{padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);font-size:13px}.flow i{color:var(--mut);font-style:normal}
+.stages{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}.stages a{width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;color:var(--mut);text-decoration:none;font-size:13px}.stages a.on{background:var(--ac);color:var(--bg);border-color:var(--ac);font-weight:700}
+.goal{color:var(--mut);margin-bottom:10px}.goal b{color:var(--tx)}
+.tech{background:var(--acbg);color:var(--ac);border-radius:99px;padding:1px 8px;font-size:12px;font-weight:700;margin-left:4px}
+.pn{display:flex;justify-content:space-between;gap:10px;margin-top:28px;padding-top:14px;border-top:1px solid var(--line)}.pn a{color:var(--ac);text-decoration:none;max-width:48%}
 .empty{color:var(--mut);padding:30px 8px}
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ok);color:#fff;padding:9px 18px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .15s;z-index:9;text-align:center}
 #toast.on{opacity:1}
@@ -234,6 +238,71 @@ chk_h:{t:"Hostess checklist",w:"Before first contact and before the event.",l:["
 const UI={en:{ph:"Search scripts or objections…  ( / )",all:"All",m:"Manager",h:"Hostess",crumb:"Section",when:"When to use",goal:"Goal of the reply",guest:"Guest says",msg:"Message to send",reply:"Reply",cp:"Copy",ok:"Copied",okv:"Copied — fill in [variables] first",rep:"If the guest replies…",says:"Guest says:",instr:"Instruction (not for sending)",cmp:"Comparison",nx:"Next step",rel:"Related scripts",none:"Nothing found. Change the query or role.",found:"Found: ",flow:"CRM status flow"},
 ru:{ph:"Найти скрипт или возражение…  ( / )",all:"Все",m:"Менеджер",h:"Хостес",crumb:"Раздел",when:"Когда использовать",goal:"Цель ответа",guest:"Реплика гостя",msg:"Текст сообщения",reply:"Ответ",cp:"Копировать",ok:"Скопировано",okv:"Скопировано — заполните [переменные]",rep:"Если гость отвечает…",says:"Гость:",instr:"Подсказка (не для отправки)",cmp:"Сравнение",nx:"Следующий шаг",rel:"Связанные скрипты",none:"Ничего не найдено. Измените запрос или роль.",found:"Найдено: ",flow:"Статусы CRM"}};
 
+
+/* ===== МЕТОДИКИ: SPIN, AIDA, 5 «да» + порядок этапов ===== */
+SECTIONS.splice(3,0,["aida","Презентация проекта (AIDA)"]);
+SECTIONS.find(x=>x[0]==="needs")[1]="Выявление потребности (SPIN)";
+SECTIONS.find(x=>x[0]==="close")[1]="Закрытие на покупку (5 «да»)";
+const TECH={needs1:"SPIN",needs2:"SPIN",spin_intro:"SPIN",spin_s:"SPIN · S",spin_p:"SPIN · P",spin_i:"SPIN · I",spin_n:"SPIN · N",aida_intro:"AIDA",aida_a:"AIDA · A",aida_i:"AIDA · I",aida_d:"AIDA · D",aida_ac:"AIDA · A",aida_all:"AIDA",yes5_intro:"5 «да»",yes5_chain:"5 «да»"};
+const GOAL={start:"Посмотрите общий порядок диалога.",first:"Поздороваться и понять, впервые ли гость.",needs:"Выяснить ситуацию, проблему, значение и выигрыш для гостя (SPIN). Один вопрос за сообщение.",aida:"Презентовать проект по схеме AIDA: внимание → интерес → желание → действие.",tickets:"Подобрать категорию и назвать цену без искажений.",obj:"Снять сомнения без давления. Боковая ветка: можно на любом шаге, потом вернитесь на тот же шаг.",close:"Привести к решению честной цепочкой из 5 «да».",pay:"Отправить инструкции, проверить оплату, подтвердить.",handoff:"Передать хостес всё нужное после подтверждённой оплаты.",host:"Сопровождать гостя до мероприятия (хостес, на «ты»).",crm:"Статусы и чек-листы."};
+Object.assign(S.find(x=>x.id==="start"),{title:"Карта диалога: с чего начать",when:"В начале смены. Идите по этапам слева направо, возражения — боковая ветка.",
+ list:["1. Первый контакт: поздоровайтесь, узнайте, впервые ли гость.","2. SPIN: ситуация → проблема → последствия → выигрыш (S → P → I → N).","3. AIDA: презентация проекта — внимание → интерес → желание → действие.","4. Билеты: подберите категорию и назовите цену.","5. 5 «да»: честная цепочка вопросов к решению.","6. Оплата → подтверждение → передача хостес.","Возражения: на любом шаге, затем вернитесь на тот же шаг.","Гость сразу просит цены — пропустите SPIN и AIDA, дайте цены.","Копируйте только английский текст; переменные в [скобках] замените; все мероприятия строго 18+; без давления и ложной срочности."],
+ rel:["first1","spin_intro","aida_intro","t_all","yes5_intro","pay1","o_think"],next:"Откройте этап 1: первый контакт."});
+Object.assign(S.find(x=>x.id==="first1"),{rel:["spin_intro","price"]});
+Object.assign(S.find(x=>x.id==="needs1"),{rel:["spin_intro","needs2"]});
+Object.assign(S.find(x=>x.id==="close1"),{rel:["yes5_intro","pay1","o_think"]});
+S.unshift(
+{id:"spin_intro",sec:"needs",role:"m",title:"SPIN: схема и правила",when:"Перед выявлением потребности. Пропустите, если гость сразу просит цены.",
+ list:["S — Ситуация: факты о госте (бывал ли, с кем идёт, на какую дату).","P — Проблема: что вызывает сомнение или неудобство.","I — Последствия: насколько это важно для вечера (мягко, без запугивания).","N — Выигрыш: гость сам говорит, что ему поможет → предложите подходящий билет.","Один вопрос за сообщение. Не спрашивайте то, на что гость уже ответил. Не превращайте диалог в анкету."],next:"Начните с S-вопроса.",rel:["spin_s","spin_p","spin_i","spin_n"]},
+{id:"spin_s",sec:"needs",role:"m",title:"S — Ситуация",when:"Узнать факты. Выберите только тот вопрос, ответа на который ещё нет.",
+ msgs:[["Опыт","Вы уже бывали у нас или будете впервые?"],["С кем","Вы планируете прийти один/одна, с партнёром или с друзьями?"],["Дата","Есть ли у вас дата, на которую вы хотели бы прийти?"]],
+ replies:[["Впервые","Переходите к P: что вызывает сомнения или вопросы."],["Один/одна","Переходите к P: уточните, что было бы комфортно."]],next:"P-вопрос.",rel:["spin_p"]},
+{id:"spin_p",sec:"needs",role:"m",title:"P — Проблема",when:"Выяснить, что вызывает сомнения или неудобство.",
+ msgs:[["Сомнения","Есть ли что-то, что вызывает у вас сомнения перед визитом — например, никого не знаете или не знаете, чего ожидать?"],["Комфорт","Что помогло бы вам чувствовать себя комфортно на вечере?"]],
+ replies:[["Назвал проблему","Переходите к I или сразу к N."],["Сомнений нет","Пропустите I, переходите к N или к презентации."]],next:"I-вопрос или N-вопрос.",rel:["spin_i","spin_n"]},
+{id:"spin_i",sec:"needs",role:"m",title:"I — Последствия",when:"Помочь гостю самому понять, насколько проблема для него важна.",
+ msgs:[["Важность","Насколько для вас важно чувствовать себя спокойно с первых минут вечера?"],["Первые минуты","Как бы вам хотелось провести первые полчаса, если вы приедете без знакомых?"]],
+ note:"Не запугивайте и не усиливайте тревогу: цель — чтобы гость сам назвал, что ему важно.",
+ replies:[["Важно","Переходите к N."],["Не важно","Не настаивайте; предложите ENTRY."]],next:"N-вопрос.",rel:["spin_n"]},
+{id:"spin_n",sec:"needs",role:"m",title:"N — Выигрыш",when:"Гость сам говорит, что ему поможет. Затем предложите билет.",
+ msgs:[["Хостес → STANDARD","Было бы вам удобно, если бы хостес помогла освоиться, познакомила с гостями и сориентировала на мероприятии?"],["Приватность → PREMIUM/VIP","Вам было бы комфортнее иметь тихую приватную зону для отдыха и напитки в течение вечера?"],["Самостоятельно → ENTRY","Похоже, вам подойдёт самостоятельный формат — вам подойдёт базовый билет с приветственным напитком?"]],
+ replies:[["Хочет хостес","Предложите STANDARD."],["Хочет приватную зону","Предложите PREMIUM или VIP."],["Хочет сам(а)","Предложите ENTRY."]],next:"Презентация AIDA, затем билеты.",rel:["aida_intro","t_std","t_prem","t_entry"]},
+{id:"aida_intro",sec:"aida",role:"m",title:"AIDA: схема презентации",when:"Гость интересуется проектом, а не только ценой.",
+ list:["A — Внимание: что такое Kinky Party и когда ближайший вечер.","I — Интерес: что получает гость (формат, доступ, хостес).","D — Желание: свяжите с тем, что гость сам сказал в SPIN.","A — Действие: предложите оплату или сравнение категорий.","Используйте только подтверждённые факты; неизвестное оставляйте в [скобках]. Без давления и срочности."],next:"Отправляйте A, I, D, A по очереди или одним сообщением.",rel:["aida_a","aida_i","aida_d","aida_ac","aida_all"]},
+{id:"aida_a",sec:"aida",role:"m",title:"A — Внимание",when:"Первое сообщение презентации.",
+ msgs:[["Внимание","Kinky Party is an 18+ event for adults, and AFTER DARK is our evening format. The next one is on [date] at [venue]."]],next:"I — интерес.",rel:["aida_i"]},
+{id:"aida_i",sec:"aida",role:"m",title:"I — Интерес",when:"Рассказать, что получает гость.",
+ msgs:[["Интерес","Here is how it works: you get access to the main party area and drinks, and if you'd like extra support, a personal hostess can help you settle in and meet guests. Everything is based on mutual consent."]],next:"D — желание.",rel:["aida_d"]},
+{id:"aida_d",sec:"aida",role:"m",title:"D — Желание",when:"Связать с тем, что гость сказал сам (из SPIN).",
+ msgs:[["Желание","You mentioned [what the guest said, e.g. that you'd like help settling in]. With [category] you would get [benefit from the package], so you can enjoy the evening your way."]],next:"A — действие.",rel:["aida_ac"]},
+{id:"aida_ac",sec:"aida",role:"m",title:"A — Действие",when:"Предложить следующий шаг, не давя.",
+ msgs:[["Действие","If this sounds right, I can send you the payment and ticket details. Which category would you like to go with?"]],
+ replies:[["Сомневается","Перейдите в «Возражения»."],["Готов","Перейдите к 5 «да» или к оплате."]],next:"5 «да» или оплата.",rel:["yes5_chain","pay1","o_think"]},
+{id:"aida_all",sec:"aida",role:"m",title:"AIDA одним сообщением",when:"Гость просит рассказать о проекте коротко.",
+ msgs:[["Полная версия","Kinky Party is an 18+ event, and AFTER DARK is our evening format: [date], [venue].\n\nEvery category includes access to the party and drinks, and higher categories add a personal hostess, a VIP lounge and more.\n\nBased on what you told me — [guest's need] — [category] could be a good fit.\n\nIf you'd like, I can send you the payment and ticket details, or compare the categories first."]],next:"Ответ гостя → билеты или возражения.",rel:["t_all","aida_a"]},
+{id:"yes5_intro",sec:"close",role:"m",title:"5 «да»: правила",when:"Когда потребность понятна и билет предложен.",
+ list:["5 коротких вопросов, на которые гость честно отвечает «да»: ситуация, потребность, вариант, цена, готовность.","Задавайте по одному, в отдельных сообщениях.","Опирайтесь только на то, что гость сам сказал.","На любом «нет» остановитесь: выясните причину (раздел «Возражения»), не повторяйте вопрос.","Без ловушек и двусмысленностей: цель — ясность, а не манипуляция."],next:"Задайте вопрос №1.",rel:["yes5_chain","o_think"]},
+{id:"yes5_chain",sec:"close",role:"m",title:"Цепочка из 5 «да»",when:"Отправляйте по одному вопросу, дожидаясь ответа.",
+ msgs:[["Да №1 · Ситуация","Вы говорили, что хотели бы прийти на [мероприятие/дату] — я правильно понял(а)?"],["Да №2 · Потребность","И для вас важно, чтобы [потребность гостя, например: вы чувствовали себя комфортно и вам помогли освоиться] — верно?"],["Да №3 · Решение","Тогда [категория] подходит: в неё входит [ключевые пункты]. Это то, что вы ищете?"],["Да №4 · Цена","Стоимость [категория] — $[сумма]. Вам это подходит?"],["Да №5 · Действие","Отлично! Отправить вам информацию по оплате и оформлению билета?"]],
+ replies:[["«Нет» на любом шаге","Спасибо, что сказали. Что было бы для вас удобнее?"],["Все пять «да»","Переходите к оплате."]],next:"Оплата.",rel:["yes5_intro","pay1","o_expensive","o_think"]}
+);
+S.sort((a,b)=>SECTIONS.findIndex(x=>x[0]===a.sec)-SECTIONS.findIndex(x=>x[0]===b.sec));
+Object.assign(E,{
+spin_intro:{t:"SPIN"},
+spin_s:{t:"S — Situation",m:[["","Have you been to our events before, or will this be your first time?"],["","Are you planning to come alone, with a partner or with friends?"],["","Is there a particular date you have in mind?"]],r:[["First time","",1],["Alone","",1]]},
+spin_p:{t:"P — Problem",m:[["","Is there anything that makes you hesitate about coming — for example, not knowing anyone or not knowing what to expect?"],["","What would help you feel comfortable at the event?"]],r:[["Named a concern","",1],["No concerns","",1]]},
+spin_i:{t:"I — Implication",m:[["","How important is it for you to feel at ease from the first minutes of the evening?"],["","How would you like your first half hour to go if you arrive without knowing anyone?"]],r:[["Important","",1],["Not important","",1]]},
+spin_n:{t:"N — Need-payoff",m:[["","Would it help if a hostess showed you around, introduced you to guests and helped you settle in?"],["","Would you prefer a quiet private area to relax in, with drinks included throughout the evening?"],["","It sounds like you would enjoy exploring on your own — would a basic ticket with a welcome drink suit you?"]],r:[["Wants a hostess","",1],["Wants a private area","",1],["On their own","",1]]},
+aida_intro:{t:"AIDA"},
+aida_a:{t:"A — Attention",m:[["","Kinky Party is an 18+ event for adults, and AFTER DARK is our evening format. The next one is on [date] at [venue]."]]},
+aida_i:{t:"I — Interest",m:[["","Here is how it works: you get access to the main party area and drinks, and if you'd like extra support, a personal hostess can help you settle in and meet guests. Everything is based on mutual consent."]]},
+aida_d:{t:"D — Desire",m:[["","You mentioned [what the guest said, e.g. that you'd like help settling in]. With [category] you would get [benefit from the package], so you can enjoy the evening your way."]]},
+aida_ac:{t:"A — Action",m:[["","If this sounds right, I can send you the payment and ticket details. Which category would you like to go with?"]],r:[["Hesitates","",1],["Ready","",1]]},
+aida_all:{t:"AIDA in one message",m:[["","Kinky Party is an 18+ event, and AFTER DARK is our evening format: [date], [venue].\n\nEvery category includes access to the party and drinks, and higher categories add a personal hostess, a VIP lounge and more.\n\nBased on what you told me — [guest's need] — [category] could be a good fit.\n\nIf you'd like, I can send you the payment and ticket details, or compare the categories first."]]},
+yes5_intro:{t:"5 yeses"},
+yes5_chain:{t:"5 yeses",m:[["","You mentioned you'd like to come to [event/date] — did I get that right?"],["","And it matters to you that [guest's need, e.g. you feel comfortable and have someone to help you settle in] — is that correct?"],["","In that case [category] seems to fit: it includes [key items]. Does that sound like what you are looking for?"],["","The price for [category] is $[amount]. Does that work for you?"],["","Great! Shall I send you the payment and ticket details?"]],r:[["No at any step","Thank you for telling me. What would work better for you?"],["All five yes","",1]]}
+});
+
 /* ===== LOGIC ===== */
 const $=s=>document.querySelector(s);
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -244,8 +313,9 @@ const byId=Object.fromEntries(S.map(s=>[s.id,s]));
 if(!byId[cur])cur="start";
 const secName=(id,l=lang)=>{const i=SECTIONS.findIndex(x=>x[0]===id);return l==="en"?SEC_EN[i]:SECTIONS[i][1]};
 const D=(s,l=lang)=>l==="ru"?{t:s.title,w:s.when,g:s.guest,l:s.list,m:s.msgs,r:s.replies,n:s.note,x:s.next}:E[s.id];
+const firstOf=sec=>(S.find(x=>x.sec===sec&&roleOk(x))||S.find(x=>x.sec===sec)).id;
 const roleOk=s=>role==="a"||s.role==="a"||s.role===role;
-const hay=Object.fromEntries(S.map(s=>[s.id,["en","ru"].map(l=>{const d=D(s,l);return [d.t,d.w,d.g,d.n,d.x,(d.l||[]).join(" "),(d.m||[]).map(x=>x.join(" ")).join(" "),(d.r||[]).map(x=>x[0]+" "+x[1]).join(" ")].join(" ")}).join(" ").toLowerCase()]));
+const hay=Object.fromEntries(S.map(s=>[s.id,["en","ru"].map(l=>{const d=D(s,l);return [d.t,d.w,d.g,d.n,d.x,(TECH[s.id]||""),(d.l||[]).join(" "),(d.m||[]).map(x=>x.join(" ")).join(" "),(d.r||[]).map(x=>x[0]+" "+x[1]).join(" ")].join(" ")}).join(" ").toLowerCase()]));
 function copy(t,btn){
   const u=UI.ru,v=/\[[^\]]+\]/.test(t);
   const done=()=>{btn.classList.add("done");btn.textContent=u.ok+" ✓";const x=$("#toast");x.textContent=v?u.okv:u.ok;x.classList.add("on");setTimeout(()=>{x.classList.remove("on");btn.classList.remove("done");btn.textContent=u.cp},v?2200:1200)};
@@ -255,7 +325,8 @@ function copy(t,btn){
 const msgH=(l,t,ru)=>`<div class="msg"><div class="h"><span>${esc(l)} · EN</span><button class="cp" data-c="${esc(t)}">${UI.ru.cp}</button></div><div class="t">${hl(t)}</div>${ru?`<div class="tr">Перевод (не копируется): ${esc(ru)}</div>`:""}</div>`;
 function view(s){
   const d=D(s),u=UI.ru,e=E[s.id];
-  let h=`<div class="in"><div class="crumb">${secName(s.sec)} · ${u[s.role]}</div><h2>${esc(d.t)}</h2>`;
+  const si=SECTIONS.findIndex(x=>x[0]===s.sec),tg=TECH[s.id]?`<span class="tech">${TECH[s.id]}</span>`:"";
+  let h=`<div class="in"><div class="stages">${SECTIONS.map((x,i)=>`<a href="#${firstOf(x[0])}" data-id="${firstOf(x[0])}" class="${i===si?"on":""}" title="${esc(x[1])}">${i+1}</a>`).join("")}</div><div class="goal"><b>Этап ${si+1}: ${esc(secName(s.sec))}.</b> ${esc(GOAL[s.sec])}</div><div class="crumb">${u[s.role]} ${tg}</div><h2>${esc(d.t)}</h2>`;
   if(d.g)h+=`<div class="guest">${u.guest}: <b>“${esc(e.g)}”</b><div class="tg">${esc(d.g)}</div></div>`;
   h+=`<p class="when">${esc(d.w)}</p>`;
   if(d.l)h+=`<ul>${d.l.map(i=>`<li>${esc(i)}</li>`).join("")}</ul>`;
@@ -265,6 +336,8 @@ function view(s){
   h+=`<div class="lbl">${u.nx}</div><div>${esc(d.x)}</div>`;
   if(s.rel)h+=`<div class="lbl">${u.rel}</div><div class="chips">${s.rel.map(i=>byId[i]?`<a href="#${i}" data-id="${i}">${esc(D(byId[i]).t)}</a>`:"").join("")}</div>`;
   if(s.sec==="crm")h+=`<div class="lbl">${u.flow}</div><div class="flow">${FLOW.map((f,i)=>`${i?"<i>→</i>":""}<span>${f}</span>`).join("")}</div>`;
+  const L=S.filter(roleOk),ix=L.findIndex(x=>x.id===s.id),pv=L[ix-1],nx=L[ix+1];
+  h+=`<div class="pn">${pv?`<a href="#${pv.id}" data-id="${pv.id}">← ${esc(pv.title)}</a>`:"<span></span>"}${nx?`<a href="#${nx.id}" data-id="${nx.id}">${esc(nx.title)} →</a>`:""}</div>`;
   return h+"</div>";
 }
 function render(){
@@ -273,10 +346,10 @@ function render(){
   $("#roles").innerHTML=["a","m","h"].map(k=>`<button data-r="${k}" class="${k===role?"on":""}">${u[k]}</button>`).join("");
   document.querySelectorAll("#langs button").forEach(b=>b.classList.toggle("on",b.dataset.l===lang));
   const items=S.filter(s=>roleOk(s)&&(!q||hay[s.id].includes(q)));
-  const a=s=>`<a href="#${s.id}" data-id="${s.id}" class="${s.id===cur?"on":""}"><span>${esc(D(s).t)}</span><small>${s.role==="a"?"":s.role.toUpperCase()}</small></a>`;
+  const a=s=>`<a href="#${s.id}" data-id="${s.id}" class="${s.id===cur?"on":""}"><span>${esc(D(s).t)}</span><small>${TECH[s.id]||(s.role==="a"?"":s.role.toUpperCase())}</small></a>`;
   let h="";
   if(q)h=`<h4>${u.found}${items.length}</h4>`+items.map(a).join("");
-  else SECTIONS.forEach(([id])=>{const g=items.filter(s=>s.sec===id);if(g.length)h+=`<h4>${secName(id)}</h4>`+g.map(a).join("")});
+  else SECTIONS.forEach(([id])=>{const g=items.filter(s=>s.sec===id);if(g.length)h+=`<h4>${SECTIONS.findIndex(x=>x[0]===id)+1}. ${secName(id)}</h4>`+g.map(a).join("")});
   $("#list").innerHTML=h||`<div class="empty">${u.none}</div>`;
   $("#main").innerHTML=view(byId[cur]);
 }
