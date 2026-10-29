@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Защита Script Desk паролем</title>
+<style>
+:root{--bg:#141518;--card:#202328;--line:#2f333a;--tx:#ececef;--mut:#9399a4;--ac:#c9a7ff}
+@media (prefers-color-scheme:light){:root{--bg:#f3f3f6;--card:#fff;--line:#d9dbe1;--tx:#1b1c20;--mut:#5d616b;--ac:#6b3fc4}}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--tx);display:grid;place-items:center;min-height:100vh;padding:16px}
+.c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;max-width:480px;width:100%}
+h1{font-size:19px;margin:0 0 8px}p,li{color:var(--mut)}
+label{display:block;margin:14px 0 4px;font-weight:600}
+input{width:100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--tx);font:inherit}
+button{margin-top:16px;width:100%;padding:11px;border:0;border-radius:8px;background:var(--ac);color:var(--bg);font:inherit;font-weight:700;cursor:pointer}
+#msg{margin-top:12px;min-height:20px}
+</style>
+</head>
+<body>
+<div class="c">
+  <h1>Защитить Script Desk паролем</h1>
+  <p>Всё происходит в вашем браузере: файл и пароль никуда не отправляются. На выходе получится <b>index.html</b>, который открывается только после ввода пароля.</p>
+  <label for="f">1. Выберите ваш index.html</label>
+  <input id="f" type="file" accept=".html">
+  <label for="p">2. Придумайте пароль (лучше фраза из 4+ слов)</label>
+  <input id="p" type="text" autocomplete="off">
+  <button id="go">3. Создать защищённый файл</button>
+  <div id="msg" role="status"></div>
+</div>
+<script>
+const ITER=250000;
+function b64(buf){const a=new Uint8Array(buf);let s="";for(let i=0;i<a.length;i+=8192)s+=String.fromCharCode.apply(null,a.subarray(i,i+8192));return btoa(s)}
+async function deriveKey(pw,salt){
+  const m=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:ITER,hash:"SHA-256"},m,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+}
+async function encrypt(html,pw){
+  const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},await deriveKey(pw,salt),new TextEncoder().encode(html));
+  const all=new Uint8Array(16+12+ct.byteLength);all.set(salt,0);all.set(iv,16);all.set(new Uint8Array(ct),28);
+  return b64(all);
+}
+const WRAP=`<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Script Desk · вход</title>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;font:15px system-ui,sans-serif;background:#141518;color:#ececef;padding:16px}
+form{background:#202328;border:1px solid #2f333a;border-radius:12px;padding:22px;width:100%;max-width:340px}
+h1{font-size:16px;margin:0 0 14px;letter-spacing:.04em}input,button{width:100%;padding:11px;border-radius:8px;border:1px solid #2f333a;font:inherit;margin-top:8px}
+input{background:#141518;color:#ececef}button{background:#c9a7ff;color:#141518;font-weight:700;border:0;cursor:pointer}#e{color:#ff8a8a;min-height:20px;margin-top:8px}</style></head>
+<body><form id="f"><h1>KINKY PARTY · SCRIPT DESK</h1><input id="p" type="password" placeholder="Пароль" autocomplete="current-password" autofocus><button>Войти</button><div id="e" role="alert"></div></form>
+<script>
+const D="__DATA__",ITER=__ITER__;
+async function open_(pw){
+  const raw=Uint8Array.from(atob(D),c=>c.charCodeAt(0));
+  const m=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveKey"]);
+  const k=await crypto.subtle.deriveKey({name:"PBKDF2",salt:raw.slice(0,16),iterations:ITER,hash:"SHA-256"},m,{name:"AES-GCM",length:256},false,["decrypt"]);
+  const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:raw.slice(16,28)},k,raw.slice(28));
+  return new TextDecoder().decode(pt);
+}
+async function enter(pw,silent){
+  const er=document.getElementById("e");let h;
+  if(!(window.crypto&&crypto.subtle)){if(!silent)er.textContent="Браузер не поддерживает расшифровку: откройте сайт по https (GitHub Pages)";return}
+  try{h=await open_(pw)}catch(e){if(!silent)er.textContent="Неверный пароль";return}
+  try{sessionStorage.setItem("sdpw",pw)}catch(e){}
+  const fr=document.createElement("iframe");
+  fr.setAttribute("allow","clipboard-write");
+  fr.style.cssText="position:fixed;inset:0;width:100%;height:100%;border:0;background:#141518";
+  fr.srcdoc=h;
+  document.body.innerHTML="";document.body.style.cssText="margin:0;display:block;padding:0";
+  document.body.appendChild(fr);
+}
+document.getElementById("f").addEventListener("submit",e=>{e.preventDefault();enter(document.getElementById("p").value,false)});
+try{const s=sessionStorage.getItem("sdpw");if(s)enter(s,true)}catch(e){}
+<\/script></body></html>`;
+document.getElementById("go").onclick=async()=>{
+  const f=document.getElementById("f").files[0],pw=document.getElementById("p").value,msg=document.getElementById("msg");
+  if(!f){msg.textContent="Выберите файл index.html.";return}
+  if(pw.length<8){msg.textContent="Пароль слишком короткий: минимум 8 символов, лучше фраза из 4+ слов.";return}
+  msg.textContent="Шифрую…";
+  try{
+    const html=await f.text(),data=await encrypt(html,pw);
+    const out=WRAP.replace("__ITER__",String(ITER)).replace("__DATA__",()=>data);
+    const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([out],{type:"text/html"}));a.download="index.html";a.click();
+    msg.textContent="Готово: скачан защищённый index.html. Загрузите в GitHub именно его, а исходный файл храните у себя.";
+  }catch(e){msg.textContent="Ошибка: "+e.message+(window.isSecureContext?"":" (откройте через https или localhost)")}
+};
+</script>
+</body>
+</html>
