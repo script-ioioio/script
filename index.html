@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kinky Party · Script Desk</title>
+<style>
+:root{--bg:#16171a;--panel:#1d1f23;--card:#22252a;--line:#32363d;--tx:#e8e9ec;--mut:#9aa0aa;--ac:#c9a7ff;--acbg:#2b2438;--ok:#6fcf97;--msg:#1a1c20}
+@media (prefers-color-scheme:light){:root{--bg:#f4f4f6;--panel:#fff;--card:#fff;--line:#dcdde2;--tx:#1b1c20;--mut:#60646d;--ac:#6b3fc4;--acbg:#efe9fb;--ok:#1e8a4c;--msg:#f4f4f6}}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--tx)}
+header{display:flex;gap:12px;align-items:center;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+header h1{font-size:15px;margin:0;font-weight:700;letter-spacing:.04em;white-space:nowrap}
+#q{flex:1;min-width:180px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--tx);font:inherit}
+#q:focus,button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.roles{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.roles button{border:0;background:none;color:var(--mut);padding:8px 12px;font:inherit;cursor:pointer}
+.roles button.on{background:var(--acbg);color:var(--ac);font-weight:600}
+.wrap{display:flex;min-height:calc(100% - 58px)}
+nav{width:250px;flex:none;background:var(--panel);border-right:1px solid var(--line);padding:10px;overflow:auto;position:sticky;top:58px;height:calc(100vh - 58px)}
+nav a{display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:7px;color:var(--mut);text-decoration:none}
+nav a:hover{background:var(--bg)}
+nav a.on{background:var(--acbg);color:var(--ac);font-weight:600}
+nav small{opacity:.7}
+main{flex:1;padding:20px;max-width:880px;width:100%}
+main h2{margin:0 0 4px;font-size:21px}
+.sub{color:var(--mut);margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.card h3{margin:0 0 4px;font-size:17px}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;border:1px solid var(--line);color:var(--mut);margin-left:6px;vertical-align:middle}
+.lbl{font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+.guest{border-left:3px solid var(--ac);padding:2px 10px;color:var(--mut);font-style:italic;margin:8px 0}
+.msg{background:var(--msg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:6px 0}
+.msg .t{white-space:pre-wrap;overflow-wrap:anywhere}
+.msg .h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;font-size:13px;color:var(--mut)}
+.cp{border:1px solid var(--ac);background:none;color:var(--ac);border-radius:6px;padding:4px 12px;font:inherit;font-size:13px;cursor:pointer;flex:none}
+.cp:hover,.cp.done{background:var(--ac);color:var(--bg)}
+.ph{color:var(--ac);font-weight:600}
+details{border:1px solid var(--line);border-radius:8px;margin:6px 0;padding:0 12px}
+details[open]{padding-bottom:8px}
+summary{cursor:pointer;padding:9px 0;font-weight:600}
+ul{margin:4px 0;padding-left:20px}
+.rel a{display:inline-block;margin:2px 6px 2px 0;padding:3px 10px;border:1px solid var(--line);border-radius:99px;color:var(--ac);text-decoration:none;font-size:13px}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:16px}
+.flow span{padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);font-size:13px}
+.flow i{color:var(--mut);font-style:normal}
+.empty{color:var(--mut);padding:30px 0;text-align:center}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ok);color:#fff;padding:8px 18px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .15s;z-index:9}
+#toast.on{opacity:1}
+@media(max-width:760px){.wrap{display:block}nav{width:auto;height:auto;position:static;display:flex;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:6px}nav a{white-space:nowrap}main{padding:14px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>KINKY PARTY · SCRIPT DESK</h1>
+  <input id="q" type="search" placeholder="Найти скрипт или возражение…" aria-label="Поиск">
+  <div class="roles" id="roles"></div>
+</header>
+<div class="wrap"><nav id="nav"></nav><main id="main"></main></div>
+<div id="toast" role="status">Скопировано</div>
+
+<script>
+/* ===== ДАННЫЕ. Редактируйте только этот блок. =====
+ m = менеджер (на «вы»), h = хостес (на «ты»), a = оба.
+ Переменные в [квадратных скобках] подсвечиваются и заменяются вручную. */
+const SECTIONS=[
+["start","Быстрый старт"],["first","Первый контакт"],["needs","Выявление потребности"],["tickets","Презентация билетов"],["obj","Работа с возражениями"],["close","Закрытие на покупку"],["pay","Оплата и подтверждение"],["handoff","Передача хостес"],["host","Сопровождение гостя"],["crm","CRM и чек-листы"]];
+const FLOW=["Новый запрос","Диалог начат","Потребность понятна","Билеты предложены","Думает / Есть возражение","Ожидает оплату","Оплачено","Передан хостес"];
+const NOTE_INT="Возможность интимного общения — не гарантия конкретного контакта или услуги: только по взаимному желанию.";
+const S=[
+{id:"start",sec:"start",role:"a",title:"Как пользоваться Script Desk",when:"В начале смены.",
+ list:["Найдите ситуацию через поиск или раздел слева.","Скопируйте сообщение кнопкой «Копировать» — копируется только текст.","Замените переменные в [скобках] перед отправкой.","Если гость ответил — откройте блок «Если гость отвечает…» и выберите ветку.","Все мероприятия строго 18+. Не придумывайте условия, возвраты, наличие билетов и правила — если не знаете, проверьте и ответьте позже.","Без давления, ложного дефицита и искусственной срочности."],
+ next:"Начните с первого контакта.",rel:["first1"]},
+{id:"first1",sec:"first",role:"m",title:"Начало диалога",when:"Гость написал впервые, вопрос ещё не задан.",
+ msgs:[["Приветствие","Здравствуйте! Спасибо за интерес к Kinky Party ✨\n\nПодскажите, вы уже бывали на наших мероприятиях или планируете прийти впервые?"]],
+ replies:[["Впервые","Тогда расскажу подробнее и помогу разобраться с форматами билетов. Подскажите, что вам хотелось бы узнать в первую очередь?"],["Уже был","Здорово! Тогда вы уже знакомы с нашим форматом. Подскажите, вы планируете прийти в этот раз один/одна или с партнёром?"],["Сразу спрашивает цену","Не задавайте встречных вопросов — сразу переходите к категориям билетов.",1]],
+ next:"Определите, что гостю важно, или сразу покажите билеты, если он просит цены.",rel:["needs1","price"]},
+{id:"needs1",sec:"needs",role:"m",title:"Вопрос о формате",when:"Гость впервые, не сказал, что именно хочет узнать. Если уже ответил — не спрашивайте повторно. Не превращайте диалог в анкету.",
+ msgs:[["Вопрос","Что для вас сейчас важнее всего понять — как проходит вечер, как устроено общение между гостями или какой билет выбрать?"]],
+ replies:[["Как проходит вечер","Кратко опишите формат своими словами, без выдуманных деталей; если не уверены — уточните у организатора."],["Общение между гостями","Переходите к вопросу о посещении в одиночку (скрипт ниже)."],["Какой билет выбрать","Переходите к презентации билетов."]],
+ next:"Переход к билетам.",rel:["needs2","t_all"]},
+{id:"needs2",sec:"needs",role:"m",title:"Гость идёт один/одна",when:"Гость сказал, что придёт без компании.",
+ msgs:[["Вопрос","Вам скорее хотелось бы самостоятельно познакомиться с гостями или было бы комфортнее, если бы хостес помогла освоиться и сориентироваться на мероприятии?"]],
+ replies:[["Хочу сам(а)","Отлично. Предложите ENTRY — полный доступ к основной зоне и приветственный напиток."],["Хочу, чтобы помогли","Предложите STANDARD и выше: в них есть персональное сопровождение хостес."]],
+ next:"Показать подходящую категорию.",rel:["t_std","t_entry"]},
+{id:"price",sec:"tickets",role:"m",title:"Гость сразу просит цены",when:"Первый вопрос — «сколько стоит».",
+ msgs:[["Все категории","Конечно! Сейчас у нас четыре категории:\n\nAFTER DARK ENTRY — $345\nSTANDARD — $499\nPREMIUM — $750\nVIP — $1,000\n\nМогу коротко рассказать, что входит в каждую, — подскажите, какая вам ближе?"]],
+ next:"Дальше — по выбору гостя.",rel:["t_entry","t_std","t_prem","t_vip","t_all"]},
+{id:"t_entry",sec:"tickets",role:"m",title:"AFTER DARK ENTRY — $345",when:"Гость хочет попробовать формат, пойдёт сам(а) и готов(а) знакомиться самостоятельно.",
+ list:["Полный доступ к основной зоне вечеринки","Приветственный напиток"],
+ msgs:[["Коротко","AFTER DARK ENTRY — $345. Полный доступ к основной зоне вечеринки и приветственный напиток."],["Полное описание","AFTER DARK ENTRY — $345.\n\n• Полный доступ к основной зоне вечеринки\n• Приветственный напиток\n\nХороший вариант, чтобы познакомиться с форматом."]],
+ note:"Сравнение: это базовый билет. С STANDARD добавляется сопровождение хостес.",
+ next:"Если нужна помощь с адаптацией — покажите STANDARD.",rel:["t_std","close1"]},
+{id:"t_std",sec:"tickets",role:"m",title:"STANDARD — $499",when:"Гость впервые, волнуется или хочет, чтобы кто-то помог освоиться.",
+ list:["Полный доступ к площадке","Приветственный напиток","Персональное сопровождение хостес: помощь с адаптацией, знакомством с гостями и ориентацией на мероприятии"],
+ msgs:[["Коротко","STANDARD — $499. Полный доступ к площадке, приветственный напиток и персональное сопровождение хостес: поможет освоиться, познакомиться с гостями и сориентироваться."],["Полное описание","STANDARD — $499.\n\n• Полный доступ к площадке\n• Приветственный напиток\n• Персональное сопровождение хостес: помощь с адаптацией, знакомством с гостями и ориентацией на мероприятии"]],
+ note:"Сравнение: от ENTRY отличается сопровождением хостес. От PREMIUM — без VIP lounge, напитков в течение вечера и возможности интимного общения.",
+ next:"Закрытие или ответ на возражение.",rel:["t_prem","close1","o_pricediff"]},
+{id:"t_prem",sec:"tickets",role:"m",title:"PREMIUM — $750",when:"Гость хочет больше комфорта, закрытую зону и расширенный формат.",
+ list:["Вход на вечеринку","Напитки в течение вечера","Персональное сопровождение хостес","Доступ в VIP lounge","Возможность интимного общения с хостес по взаимному желанию"],
+ msgs:[["Коротко","PREMIUM — $750. Вход, напитки в течение вечера, персональное сопровождение хостес, доступ в VIP lounge и возможность интимного общения с хостес по взаимному желанию. Это не гарантия конкретного контакта."],["Полное описание","PREMIUM — $750.\n\n• Вход на вечеринку\n• Напитки в течение вечера\n• Персональное сопровождение хостес\n• Доступ в VIP lounge\n• Возможность интимного общения с хостес по взаимному желанию\n\nВажно: это возможность, а не гарантия конкретного контакта или услуги."]],
+ note:"Сравнение: от STANDARD отличается VIP lounge, напитками в течение вечера и возможностью интимного общения. От VIP — без отдельного входа, приватного lounge и приватных развлечений. "+NOTE_INT,
+ next:"Закрытие или возражение.",rel:["t_vip","o_guarantee","close1"]},
+{id:"t_vip",sec:"tickets",role:"m",title:"VIP — $1,000",when:"Гость ищет максимальный комфорт и приватность.",
+ list:["Отдельный VIP-вход без ожидания в общей очереди","Приватный VIP lounge","Напитки в течение вечера","Широкий выбор приватных развлечений","Возможность интимного общения с хостес по взаимному желанию"],
+ msgs:[["Коротко","VIP — $1,000. Отдельный вход без очереди, приватный VIP lounge, напитки в течение вечера, широкий выбор приватных развлечений и возможность интимного общения с хостес по взаимному желанию. Это не гарантия конкретного контакта."],["Полное описание","VIP — $1,000.\n\n• Отдельный VIP-вход без ожидания в общей очереди\n• Приватный VIP lounge\n• Напитки в течение вечера\n• Широкий выбор приватных развлечений\n• Возможность интимного общения с хостес по взаимному желанию\n\nВажно: это возможность, а не гарантия конкретного контакта или услуги."]],
+ note:"Сравнение: самая полная категория; от PREMIUM отличается отдельным входом, приватным lounge и приватными развлечениями. "+NOTE_INT,
+ next:"Закрытие.",rel:["t_prem","close1"]},
+{id:"t_all",sec:"tickets",role:"m",title:"Сравнение всех категорий",when:"Гость просит помочь выбрать.",
+ msgs:[["Сравнение","Коротко о категориях:\n\nENTRY ($345) — доступ к основной зоне и приветственный напиток.\nSTANDARD ($499) — плюс персональное сопровождение хостес.\nPREMIUM ($750) — вход, напитки в течение вечера, хостес, VIP lounge и возможность интимного общения по взаимному желанию.\nVIP ($1,000) — отдельный вход, приватный lounge, напитки, приватные развлечения и возможность интимного общения по взаимному желанию.\n\nЧто для вас важнее — стоимость, комфорт или сопровождение?"]],
+ next:"Рекомендация по ответу гостя.",rel:["o_recommend","close1"]},
+{id:"o_expensive",sec:"obj",role:"m",title:"«Дорого»",guest:"Дороговато.",when:"Цель: понять, с чем сравнивает, и предложить подходящую категорию без давления.",
+ msgs:[["Ответ","Понимаю, вопрос бюджета важен. Подскажите, что для вас в приоритете? Если хочется просто познакомиться с форматом, подойдёт AFTER DARK ENTRY — $345."]],
+ replies:[["Продолжает сомневаться","Спасибо, что сказали. Если будут вопросы — я на связи, решение остаётся за вами."],["Готов покупать","Отлично! Тогда ориентируемся на выбранную категорию. Могу отправить информацию по оплате."]],
+ next:"Закрытие или «я подумаю».",rel:["o_think","close1"]},
+{id:"o_pricediff",sec:"obj",role:"m",title:"«Почему такая разница в цене?»",guest:"Почему такая разница между билетами?",when:"Цель: объяснить состав пакетов фактами.",
+ msgs:[["Ответ","Разница в составе: STANDARD добавляет сопровождение хостес, PREMIUM — VIP lounge, напитки в течение вечера и возможность интимного общения по взаимному желанию, VIP — отдельный вход и приватный lounge. Хотите, сравню две категории, которые вам интересны?"]],
+ replies:[["Продолжает сомневаться","Давайте уточню, что для вас важнее всего, и подскажу подходящий вариант."],["Готов покупать","Тогда фиксируем категорию — отправить информацию по оплате?"]],
+ next:"Сравнение билетов.",rel:["t_all","close1"]},
+{id:"o_think",sec:"obj",role:"m",title:"«Я подумаю»",guest:"Я подумаю.",when:"Цель: спокойно оставить дверь открытой, без давления.",
+ msgs:[["Ответ","Конечно, не торопитесь. Если появятся вопросы по билетам или формату мероприятия, я с удовольствием отвечу."]],
+ replies:[["Возвращается с вопросами","Ответьте на вопрос, затем вернитесь к выбору категории."],["Готов покупать","Отлично! Тогда ориентируемся на выбранную категорию. Могу отправить информацию по оплате."]],
+ next:"Статус в CRM: «Думает».",rel:["close1"]},
+{id:"o_alone",sec:"obj",role:"m",title:"«Я иду один/одна»",guest:"Я пойду один/одна, это нормально?",when:"Цель: снять тревогу, предложить варианты.",
+ msgs:[["Ответ","Конечно, многие гости приходят самостоятельно. Подскажите, вам скорее хотелось бы самому/самой знакомиться с гостями или было бы комфортнее, если бы хостес помогла освоиться?"]],
+ replies:[["Сам(а)","Предложите ENTRY."],["С помощью","Предложите STANDARD и выше."]],
+ next:"Показ билетов.",rel:["t_entry","t_std"]},
+{id:"o_first",sec:"obj",role:"m",title:"«Я впервые, чего ожидать?»",guest:"Я впервые и не знаю, чего ожидать.",when:"Цель: успокоить и сориентировать, не обещая лишнего.",
+ msgs:[["Ответ","Это нормальный вопрос. Расскажу, как устроен вечер, и помогу выбрать комфортный формат. Для первого посещения многим удобно сопровождение хостес — она помогает освоиться и сориентироваться. Что хотелось бы узнать в первую очередь?"]],
+ replies:[["Продолжает сомневаться","Предложите ответить на конкретные вопросы; не придумывайте детали программы."],["Готов покупать","Предложите STANDARD или выбранную категорию."]],
+ next:"STANDARD.",rel:["t_std"]},
+{id:"o_recommend",sec:"obj",role:"m",title:"«Какой билет посоветуете?»",guest:"Какой билет вы посоветуете?",when:"Цель: рекомендовать по потребности гостя.",
+ msgs:[["Ответ","Подскажите: вы хотите самостоятельно познакомиться с гостями или чтобы вас сопровождала хостес? И важны ли вам закрытая зона и напитки в течение вечера? Тогда подберу вариант."]],
+ replies:[["Ответ получен","Рекомендуйте по логике: сам(а) — ENTRY; помощь — STANDARD; закрытая зона и напитки — PREMIUM/VIP."]],
+ next:"Закрытие.",rel:["t_all","close1"]},
+{id:"o_onlyprice",sec:"obj",role:"m",title:"«Мне нужны только цены»",guest:"Скажите только цены.",when:"Цель: дать цены сразу, не задавая вопросов.",
+ msgs:[["Ответ","AFTER DARK ENTRY — $345\nSTANDARD — $499\nPREMIUM — $750\nVIP — $1,000\n\nЕсли нужно, расскажу, что входит в каждую категорию."]],
+ next:"Дождаться реакции гостя.",rel:["price"]},
+{id:"o_guarantee",sec:"obj",role:"m",title:"«Интимное общение гарантировано?»",guest:"Это гарантировано?",when:"Цель: честно объяснить, что это возможность, а не гарантия.",
+ msgs:[["Ответ","Нет, это возможность общения по взаимному желанию, а не гарантия конкретного контакта или услуги. Всё происходит только при согласии обеих сторон."]],
+ replies:[["Продолжает сомневаться","Не обещайте ничего сверх написанного. Предложите STANDARD или другую категорию."],["Готов покупать","Продолжайте к закрытию."]],
+ next:"Закрытие.",rel:["t_prem","close1"]},
+{id:"o_onsite",sec:"obj",role:"m",title:"«Можно купить билет на месте?»",guest:"А на месте можно купить?",when:"Условия неизвестны — не придумывайте ответ.",
+ msgs:[["Ответ","Сейчас уточню актуальные условия и сразу вернусь к вам с ответом."]],
+ next:"Уточните у организатора и ответьте.",rel:["close1"]},
+{id:"close1",sec:"close",role:"m",title:"Гость выбрал билет",when:"Гость назвал категорию.",
+ msgs:[["Подтверждение","Отлично! Тогда ориентируемся на [категория] за $[сумма].\n\nМогу отправить вам информацию по оплате и оформлению билета."]],
+ replies:[["Хочет подумать","Конечно, не торопитесь. Если появятся вопросы по билетам или формату мероприятия, я с удовольствием отвечу."]],
+ next:"Оплата.",rel:["pay1","o_think"]},
+{id:"pay1",sec:"pay",role:"m",title:"Инструкции по оплате",when:"Гость готов оплатить.",
+ msgs:[["Отправка","Отправляю информацию по оплате:\n\n[инструкции и ссылка на оплату — вставить актуальные]\n\nПосле оплаты, пожалуйста, подтвердите платёж ответным сообщением."]],
+ next:"Ждать подтверждения.",rel:["pay2"]},
+{id:"pay2",sec:"pay",role:"m",title:"Запрос подтверждения платежа",when:"Гость сказал, что оплатил.",
+ msgs:[["Запрос","Спасибо! Пожалуйста, отправьте подтверждение платежа: [скриншот/номер операции]. Я проверю и сразу вернусь к вам."]],
+ next:"Проверить оплату.",rel:["pay3"]},
+{id:"pay3",sec:"pay",role:"m",title:"Подтверждение после проверки",when:"Оплата проверена.",
+ msgs:[["Подтверждение","Оплата получена, спасибо! Ваша категория: [категория].\n\nВ ближайшее время с вами свяжется хостес и ответит на организационные вопросы."]],
+ next:"Передать хостес.",rel:["hand1"]},
+{id:"hand1",sec:"handoff",role:"m",title:"Передача информации хостес",when:"Только после подтверждённой оплаты.",
+ list:["Имя и контакт гостя","Категория билета","Статус оплаты","Первый ли это визит","Важные вопросы и предпочтения, которые гость сам сообщил","Нерешённые организационные вопросы"],
+ msgs:[["Шаблон для хостес","Гость: [имя, контакт]\nБилет: [категория]\nОплата: [подтверждена]\nПервый визит: [да/нет]\nПожелания гостя: [только то, что сообщил сам]\nОткрытые вопросы: [если есть]"]],
+ next:"Хостес пишет первое сообщение.",rel:["host1","chk_h"]},
+{id:"host1",sec:"host",role:"h",title:"Первое сообщение гостю",when:"После получения информации от менеджера.",
+ msgs:[["Приветствие","Привет! ✨ Меня зовут [имя], я буду твоей хостес на Kinky Party.\n\nЯ буду на связи и помогу с организационными вопросами, чтобы тебе было проще подготовиться к вечеру.\n\nЕсли что-то захочешь уточнить — смело пиши!"]],
+ next:"Дождаться ответа.",rel:["host2","host3","host4"]},
+{id:"host2",sec:"host",role:"h",title:"Гость впервые на мероприятии",when:"Гость сообщил, что будет впервые.",
+ msgs:[["Сообщение","Здорово, что ты придёшь! Если это впервые, это нормально — я помогу освоиться и сориентироваться. Если появятся вопросы заранее, пиши, отвечу."]],
+ next:"Напоминание перед событием.",rel:["host5"]},
+{id:"host3",sec:"host",role:"h",title:"Гость переживает",when:"Гость пишет, что волнуется.",
+ msgs:[["Сообщение","Волнение перед первым визитом — это нормально. Я на связи, и на месте тоже помогу сориентироваться. Что именно тебя беспокоит? Постараюсь помочь."]],
+ next:"Ответить на конкретный вопрос.",rel:["host6"]},
+{id:"host4",sec:"host",role:"h",title:"Организационный вопрос",when:"Вопрос про подготовку, время, формат связи.",
+ msgs:[["Сообщение","Сейчас уточню и вернусь к тебе с точным ответом."]],
+ replies:[["Не знаешь ответа","Уточните у менеджера и не придумывайте условия."]],
+ next:"Ответить после уточнения.",rel:["host6"]},
+{id:"host5",sec:"host",role:"h",title:"Напоминание перед мероприятием",when:"За день до мероприятия.",
+ msgs:[["Напоминание","Привет! Напоминаю, что завтра Kinky Party ✨ Время и место: [уточнить]. Если остались вопросы — пиши, я на связи."]],
+ next:"Встреча с гостем.",rel:["host1"]},
+{id:"host6",sec:"host",role:"h",title:"Вопрос вне полномочий хостес",when:"Оплата, возврат, смена билета, изменение условий.",
+ msgs:[["Сообщение","Этот вопрос решает менеджер. Я передам ему твой запрос, и он свяжется с тобой."]],
+ next:"Передать менеджеру.",rel:["chk_h"]},
+{id:"chk_m",sec:"crm",role:"m",title:"Чек-лист менеджера",when:"Перед закрытием диалога.",
+ list:["Определена потребность","Предложена подходящая категория","Названа цена без искажений","Нет обещаний сверх описания","Оплата проверена","Информация передана хостес","Статус в CRM обновлён"],
+ next:"Передача хостес.",rel:["hand1"]},
+{id:"chk_h",sec:"crm",role:"h",title:"Чек-лист хостес",when:"Перед первым контактом и перед мероприятием.",
+ list:["Получены данные гостя и категория билета","Отправлено первое сообщение","Учтены пожелания гостя","Организационные вопросы закрыты","Отправлено напоминание","Вопросы вне полномочий переданы менеджеру"],
+ next:"Сопровождение гостя.",rel:["host1","host5"]}
+];
+
+/* ===== ЛОГИКА ===== */
+const $=s=>document.querySelector(s);
+const esc=t=>t.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const hl=t=>esc(t).replace(/\[[^\]]+\]/g,m=>`<span class="ph">${m}</span>`);
+const RN={a:"Все",m:"Менеджер",h:"Хостес"};
+let role="a",sec=location.hash.slice(1)||"start",query="";
+const byId=Object.fromEntries(S.map(s=>[s.id,s]));
+const text=s=>[s.title,s.when,s.guest,s.note,s.next,(s.list||[]).join(" "),(s.msgs||[]).map(m=>m.join(" ")).join(" "),(s.replies||[]).map(m=>m[0]+" "+m[1]).join(" ")].join(" ").toLowerCase();
+const roleOk=s=>role==="a"||s.role==="a"||s.role===role;
+function copy(t,btn){
+  const done=()=>{btn.classList.add("done");btn.textContent="Скопировано ✓";const x=$("#toast");x.classList.add("on");setTimeout(()=>{x.classList.remove("on");btn.classList.remove("done");btn.textContent="Копировать"},1400)};
+  if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).then(done,fb);else fb();
+  function fb(){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(e){}a.remove();done()}
+}
+const msgH=(l,t,k)=>`<div class="msg"><div class="h"><span>${esc(l)}</span>${k?"":`<button class="cp" data-c="${esc(t).replace(/"/g,"&quot;")}">Копировать</button>`}</div><div class="t">${hl(t)}</div></div>`;
+function card(s){
+  let h=`<article class="card" id="s-${s.id}"><h3>${esc(s.title)}<span class="tag">${RN[s.role]}</span></h3>`;
+  if(s.guest)h+=`<div class="lbl">Реплика гостя</div><div class="guest">${esc(s.guest)}</div>`;
+  h+=`<div class="lbl">${s.guest?"Цель ответа":"Когда использовать"}</div><div>${esc(s.when)}</div>`;
+  if(s.list)h+=`<ul>${s.list.map(i=>`<li>${esc(i)}</li>`).join("")}</ul>`;
+  if(s.msgs)h+=`<div class="lbl">${s.guest?"Готовый ответ":"Текст сообщения"}</div>`+s.msgs.map(m=>msgH(m[0],m[1])).join("");
+  if(s.note)h+=`<div class="lbl">Сравнение</div><div>${esc(s.note)}</div>`;
+  if(s.replies)h+=`<div class="lbl">Если гость отвечает…</div>`+s.replies.map(r=>`<details><summary>${esc(r[0])}</summary>${msgH("Ответ",r[1],r[2])}</details>`).join("");
+  h+=`<div class="lbl">Следующий шаг</div><div>${esc(s.next)}</div>`;
+  if(s.rel)h+=`<div class="lbl">Связанные скрипты</div><div class="rel">${s.rel.map(i=>byId[i]?`<a href="#${byId[i].sec}" data-go="${i}">${esc(byId[i].title)}</a>`:"").join("")}</div>`;
+  return h+"</article>";
+}
+function render(){
+  const q=query.trim().toLowerCase();
+  $("#nav").innerHTML=SECTIONS.map(([id,n])=>`<a href="#${id}" data-sec="${id}" class="${!q&&id===sec?"on":""}">${n}<small>${S.filter(s=>s.sec===id&&roleOk(s)).length}</small></a>`).join("");
+  let list=S.filter(roleOk),title,sub="";
+  if(q){list=list.filter(s=>text(s).includes(q));title=`Поиск: «${esc(query)}»`;sub=`Найдено: ${list.length}`}
+  else{list=list.filter(s=>s.sec===sec);title=(SECTIONS.find(x=>x[0]===sec)||SECTIONS[0])[1]}
+  let h=`<h2>${title}</h2><p class="sub">${sub}</p>`;
+  if(!q&&sec==="crm")h+=`<div class="flow">${FLOW.map((f,i)=>`${i?"<i>→</i>":""}<span>${f}</span>`).join("")}</div>`;
+  h+=list.length?list.map(card).join(""):`<div class="empty">Ничего не найдено. Измените запрос или роль.</div>`;
+  $("#main").innerHTML=h;
+}
+$("#roles").innerHTML=Object.entries({a:"Все",m:"Менеджер",h:"Хостес"}).map(([k,v])=>`<button data-r="${k}" class="${k==="a"?"on":""}">${v}</button>`).join("");
+document.addEventListener("click",e=>{
+  const c=e.target.closest(".cp");if(c){copy(c.dataset.c,c);return}
+  const r=e.target.closest("[data-r]");if(r){role=r.dataset.r;document.querySelectorAll("[data-r]").forEach(b=>b.classList.toggle("on",b===r));render();return}
+  const n=e.target.closest("[data-sec]");if(n){e.preventDefault();sec=n.dataset.sec;query="";$("#q").value="";location.hash=sec;render();scrollTo(0,0);return}
+  const g=e.target.closest("[data-go]");if(g){e.preventDefault();const s=byId[g.dataset.go];sec=s.sec;query="";$("#q").value="";location.hash=sec;render();const el=document.getElementById("s-"+s.id);if(el){el.scrollIntoView();el.style.outline="2px solid var(--ac)";setTimeout(()=>el.style.outline="",1600)}}
+});
+$("#q").addEventListener("input",e=>{query=e.target.value;render()});
+addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(SECTIONS.some(x=>x[0]===h)){sec=h;render()}});
+render();
+</script>
+</body>
+</html>
